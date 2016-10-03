@@ -20,9 +20,12 @@
 
 module Spree
   class Product < Spree::Base
-    # extend FriendlyId
+    extend FriendlyId
     include ActsAsTaggable
-    # friendly_id :slug_candidates, use: :history
+    def self.setup_friendly_id
+      friendly_id :slug_candidates, use: :history
+    end
+    setup_friendly_id
 
     acts_as_paranoid
 
