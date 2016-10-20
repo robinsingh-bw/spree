@@ -3,12 +3,6 @@ module Spree
     module Adjuster
       class Tax < Spree::Adjustable::Adjuster::Base
         def update
-          # ORIGINAL
-          # tax = adjustments.tax
-          # included_tax_total = tax.is_included.reload.map(&:update!).compact.sum
-          # additional_tax_total = tax.additional.reload.map(&:update!).compact.sum
-          # update_totals(included_tax_total, additional_tax_total)
-
           tax = adjustable.is_a?(Spree::LineItem) ? adjustable.tax_adjustments : adjustments.tax
 
           included_tax_total = tax.select{|a| a.included == true }.map{ |a|
