@@ -20,7 +20,9 @@ class Project
     @name = name
   end
 
-  ALL = %w[api backend core frontend sample].map(&method(:new)).freeze
+  # we dont care about testing the entire project, just the core stuff
+  # ALL = %w[api backend core frontend sample].map(&method(:new)).freeze
+  ALL = %w[core].map(&method(:new)).freeze
 
   # Install subproject
   #

@@ -13,8 +13,8 @@ module Spree
             a.update!(adjustable)
           }.compact.sum
 
-          if promo_adjustments.count > 0
-            choose_best_promo_adjustment if promo_adjustments.count > 1
+          if promo_adjustments.size > 0
+            choose_best_promo_adjustment if promo_adjustments.size > 1
             promo_total = best_promo_adjustment.try(:amount).to_f if best_promo_adjustment.try(:promotion?)
           end
 
