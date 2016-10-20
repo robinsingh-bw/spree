@@ -3,12 +3,25 @@ module Spree
     module Adjuster
       class Promotion < Spree::Adjustable::Adjuster::Base
         def update
-          promo_adjustments = adjustments.competing_promos.reload.map { |a| a.update!(adjustable) }
-          promos_total = promo_adjustments.compact.sum
-          choose_best_promo_adjustment unless promos_total == 0
-          promo_total = best_promo_adjustment.try(:amount).to_f if best_promo_adjustment.try(:promotion?)
+          if adjustable.is_a? Spree::LineItem
+            promo_adjustments = adjustable.promo_adjustments
+          else
+            promo_adjustments = adjustments.competing_promos
+          end
+
+          promos_total = promo_adjustments.map { |a|
+            a.update!(adjustable)
+          }.compact.sum
+
+          if promo_adjustments.count > 0
+            choose_best_promo_adjustment if promo_adjustments.count > 1
+            promo_total = best_promo_adjustment.try(:amount).to_f if best_promo_adjustment.try(:promotion?)
+          end
 
           update_totals(promo_total)
+
+          # reset the association cache so it is reloaded the next time
+          promo_adjustments.reset
         end
 
         private

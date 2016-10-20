@@ -87,9 +87,11 @@ module Spree
     def update!(target = adjustable)
       return amount if closed? || source.blank?
       amount = source.compute_amount(target)
-      attributes = { amount: amount, updated_at: Time.current }
-      attributes[:eligible] = source.promotion.eligible?(target) if promotion?
-      update_columns(attributes)
+      attrs = { amount: BigDecimal.new(amount.to_s).round(2) }
+      attrs[:eligible] = source.promotion.eligible?(target) if promotion?
+      if self.attributes.symbolize_keys.slice(*attrs.keys) != attrs
+        update_columns(attrs.merge(updated_at: Time.current))
+      end
       amount
     end
 

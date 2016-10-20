@@ -27,12 +27,14 @@ module Spree
       private
 
       def persist_totals(totals)
-        attributes = totals
-        attributes[:adjustment_total] = totals[:non_taxable_adjustment_total] +
-                                        totals[:taxable_adjustment_total] +
-                                        totals[:additional_tax_total]
-        attributes[:updated_at] = Time.current
-        @adjustable.update_columns(totals)
+        totals[:adjustment_total] = totals[:non_taxable_adjustment_total] +
+                                    totals[:taxable_adjustment_total] +
+                                    totals[:additional_tax_total]
+
+        if @adjustable.attributes.symbolize_keys.slice(*totals.keys) != totals
+          totals[:updated_at] = Time.current
+          @adjustable.update_columns(totals)
+        end
       end
 
       def shipment?

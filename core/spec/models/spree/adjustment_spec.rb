@@ -76,7 +76,7 @@ describe Spree::Adjustment, type: :model do
     end
   end
 
-  describe 'competing_promos scope' do    
+  describe 'competing_promos scope' do
     before do
       allow_any_instance_of(Spree::Adjustment).to receive(:update_adjustable_adjustment_total).and_return(true)
     end
@@ -176,12 +176,21 @@ describe Spree::Adjustment, type: :model do
     context "when adjustment is open" do
       before { expect(adjustment).to receive(:closed?).and_return(false) }
 
-      it "updates the amount" do
+      after do
         expect(adjustment).to receive(:adjustable).and_return(double("Adjustable")).at_least(1).times
         expect(adjustment).to receive(:source).and_return(double("Source")).at_least(1).times
-        expect(adjustment.source).to receive("compute_amount").with(adjustment.adjustable).and_return(5)
-        expect(adjustment).to receive(:update_columns).with(amount: 5, updated_at: kind_of(Time))
+        expect(adjustment.source).to receive("compute_amount").with(adjustment.adjustable).and_return(6)
         adjustment.update!
+      end
+
+      it "updates the amount" do
+        expect(adjustment.amount).not_to eq 6
+        expect(adjustment).to receive(:update_columns).with(amount: 6, updated_at: kind_of(Time))
+      end
+
+      it "does not update the amount if its the same" do
+        adjustment.amount = 6
+        expect(adjustment).not_to receive(:update_columns)
       end
     end
   end
