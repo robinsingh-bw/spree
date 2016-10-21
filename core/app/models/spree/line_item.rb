@@ -13,7 +13,7 @@ module Spree
     has_many :adjustments, as: :adjustable, dependent: :destroy
     has_many :inventory_units, inverse_of: :line_item
 
-    has_many :promo_adjustments, ->() { where(source_type: 'Spree::PromotionAction') }, as: :adjustable, class_name: Spree::Adjustment.name
+    has_many :promo_adjustments, ->() { where(source_type: Spree::Adjustment.competing_promos_source_types) }, as: :adjustable, class_name: Spree::Adjustment.name
     has_many :tax_adjustments, ->() { where(source_type: 'Spree::TaxRate') }, as: :adjustable, class_name: Spree::Adjustment.name
 
     before_validation :copy_price

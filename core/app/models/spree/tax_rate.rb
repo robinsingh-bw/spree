@@ -56,8 +56,8 @@ module Spree
                        when Spree::Shipment then item.discounted_cost
                        end
       pre_tax_amount /= (1 + item.pre_tax_multiplier)
-      if pre_tax_amount != item.pre_tax_amount
-        item.update_column(:pre_tax_amount, pre_tax_amount)
+      if pre_tax_amount.round(4) != item.pre_tax_amount
+        item.update_column(:pre_tax_amount, pre_tax_amount.round(4))
       end
     end
 
