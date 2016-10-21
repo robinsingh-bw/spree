@@ -42,6 +42,7 @@ module Spree
           promo_adjustments: {source: [:promotion, :calculator]},
           tax_adjustments: {source: [:calculator]}
         ).each do |adjustable|
+        adjustable.order = order
         Spree::Adjustable::AdjustmentsUpdater.update(adjustable)
       end
 

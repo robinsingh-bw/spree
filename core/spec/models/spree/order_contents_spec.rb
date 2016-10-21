@@ -112,6 +112,19 @@ describe Spree::OrderContents, type: :model do
           subject.add(variant, 1)
           expect(order.included_tax_total.to_f).to eq(200)
         end
+
+        it "should update included_tax_total after adding a line item then updating the order after its promotion has expired" do
+          subject.add(variant, 1)
+          expect(order.total).to eq 500
+          expect(order.included_tax_total.to_f).to eq(100)
+          subject.add(variant, 1)
+          expect(order.total).to eq 1000
+          expect(order.included_tax_total.to_f).to eq(200)
+          promotion.update_attributes!(expires_at: 2.minutes.ago)
+          order.update_with_updater!
+          expect(order.total).to eq 2000
+          expect(order.included_tax_total.to_f).to eq(400) # full tax for 2 items
+        end
       end
     end
   end

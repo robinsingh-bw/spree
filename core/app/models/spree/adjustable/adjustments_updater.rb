@@ -31,7 +31,7 @@ module Spree
                                     totals[:taxable_adjustment_total] +
                                     totals[:additional_tax_total]
 
-        if @adjustable.attributes.symbolize_keys.slice(*totals.keys) != totals
+        if @adjustable.changed? || @adjustable.attributes.symbolize_keys.slice(*totals.keys) != totals
           totals[:updated_at] = Time.current
           @adjustable.update_columns(totals)
         end

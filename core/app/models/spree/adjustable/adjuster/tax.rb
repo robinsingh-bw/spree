@@ -3,6 +3,11 @@ module Spree
     module Adjuster
       class Tax < Spree::Adjustable::Adjuster::Base
         def update
+          if !adjustable.is_a? Spree::Order
+            # tax rate needs the updated promo and taxable_adjustment_total which are both calculated by the promotion adjuster (before this method)
+            adjustable.assign_attributes(@totals)
+          end
+
           tax = adjustable.is_a?(Spree::LineItem) ? adjustable.tax_adjustments : adjustments.tax
 
           included_tax_total = tax.select{|a| a.included == true }.map{ |a|
