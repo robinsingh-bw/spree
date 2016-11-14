@@ -22,10 +22,7 @@ module Spree
   class Product < Spree::Base
     extend FriendlyId
     include ActsAsTaggable
-    def self.setup_friendly_id
-      friendly_id :slug_candidates, use: :history
-    end
-    setup_friendly_id
+    friendly_id :slug_candidates, use: :history
 
     acts_as_paranoid
 
@@ -108,7 +105,7 @@ module Spree
       validates :price, if: proc { Spree::Config[:require_master_price] }
     end
 
-    validates :slug, length: { minimum: 3 }, allow_blank: true, uniqueness: true
+    validates :slug, length: { minimum: 3 }, allow_blank: true
 
     attr_accessor :option_values_hash
 
