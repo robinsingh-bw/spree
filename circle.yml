@@ -9,6 +9,9 @@ machine:
 dependencies:
   override:
     - ./build-ci.rb install
+  pre:
+    - echo Y | rvm @global do gem uninstall bundler
+    - gem install bundler -v '1.13.6'
 test:
   override:
     - './build-ci.rb test':
