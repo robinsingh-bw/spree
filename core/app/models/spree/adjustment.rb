@@ -98,6 +98,7 @@ module Spree
     private
 
     def update_adjustable_adjustment_total
+      return unless adjustable # this can happen when line_item is being destroyed
       # Cause adjustable's total to be recalculated
       Adjustable::AdjustmentsUpdater.update(adjustable)
     end

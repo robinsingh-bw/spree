@@ -40,12 +40,19 @@ describe Spree::Adjustment, type: :model do
   end
 
   context '#create & #destroy' do
-    let(:adjustment) { Spree::Adjustment.new(label: "Adjustment", amount: 5, order: order, adjustable: create(:line_item)) }
+    let(:line_item) { create(:line_item) }
+    let(:adjustment) { Spree::Adjustment.new(label: "Adjustment", amount: 5, order: order, adjustable: line_item) }
 
     it 'calls #update_adjustable_adjustment_total' do
       expect(adjustment).to receive(:update_adjustable_adjustment_total).twice
       adjustment.save
       adjustment.destroy
+    end
+
+    it "should not update adjustment if adjustable is nil" do
+      adjustment.save!
+      adjustment.adjustable = nil
+      expect{adjustment.destroy!}.not_to raise_error
     end
   end
 
