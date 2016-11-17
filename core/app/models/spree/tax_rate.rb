@@ -36,18 +36,29 @@ module Spree
     # Pre-tax amounts must be stored so that we can calculate
     # correct rate amounts in the future. For example:
     # https://github.com/spree/spree/issues/4318#issuecomment-34723428
-    def self.store_pre_tax_amount(item, rates)
+    def self.store_pre_tax_amount(item, rates=nil)
+      update_pre_tax_multiplier(item, rates) if !rates.nil?
+      update_pre_tax_amount(item)
+    end
+
+    def self.update_pre_tax_multiplier(item, rates)
+      pre_tax_multiplier = 0
+      included_rates = rates.select(&:included_in_price)
+      if included_rates.any?
+        pre_tax_multiplier = included_rates.map(&:amount).sum
+      end
+      item.update_column(:pre_tax_multiplier, pre_tax_multiplier)
+    end
+
+    def self.update_pre_tax_amount(item)
       pre_tax_amount = case item
                        when Spree::LineItem then item.discounted_amount
                        when Spree::Shipment then item.discounted_cost
                        end
-
-      included_rates = rates.select(&:included_in_price)
-      if included_rates.any?
-        pre_tax_amount /= (1 + included_rates.map(&:amount).sum)
+      pre_tax_amount /= (1 + item.pre_tax_multiplier)
+      if pre_tax_amount.round(4) != item.pre_tax_amount
+        item.update_column(:pre_tax_amount, pre_tax_amount.round(4))
       end
-
-      item.update_column(:pre_tax_amount, pre_tax_amount)
     end
 
     # Deletes all tax adjustments, then applies all applicable rates
@@ -59,11 +70,7 @@ module Spree
       # using destroy_all to ensure adjustment destroy callback fires.
       Spree::Adjustment.where(adjustable: items).tax.destroy_all
 
-      relevant_items = items.select do |item|
-        tax_categories.include?(item.tax_category)
-      end
-
-      relevant_items.each do |item|
+      items.each do |item|
         relevant_rates = rates.select do |rate|
           rate.tax_category == item.tax_category
         end
@@ -71,12 +78,6 @@ module Spree
         relevant_rates.each do |rate|
           rate.adjust(order, item)
         end
-      end
-
-      # updates pre_tax for items without any tax rates
-      remaining_items = items - relevant_items
-      remaining_items.each do |item|
-        store_pre_tax_amount(item, [])
       end
     end
 
@@ -93,6 +94,8 @@ module Spree
     end
 
     def compute_amount(item)
+      # update pre tax amount as it could have changed due to promotions being added/removed
+      self.class.update_pre_tax_amount(item)
       compute(item)
     end
 

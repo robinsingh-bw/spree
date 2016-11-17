@@ -78,14 +78,7 @@ module Spree
               before_transition to: :complete, do: :ensure_line_items_are_in_stock
 
               if states[:payment]
-                before_transition to: :complete do |order|
-                  if order.payment_required? && order.payments.valid.empty?
-                    order.errors.add(:base, Spree.t(:no_payment_found))
-                    false
-                  elsif order.payment_required?
-                    order.process_payments!
-                  end
-                end
+                before_transition to: :complete, do: :ensure_payments_are_processed
                 after_transition to: :complete, do: :persist_user_credit_card
                 before_transition to: :payment, do: :set_shipments_cost
                 before_transition to: :payment, do: :create_tax_charge!
@@ -115,8 +108,7 @@ module Spree
               after_transition to: :canceled, do: :after_cancel
 
               after_transition from: any - :cart, to: any - [:confirm, :complete] do |order|
-                order.update_totals
-                order.persist_totals
+                order.update_with_updater!
               end
             end
 
@@ -185,6 +177,15 @@ module Spree
 
           def self.add_transition(options)
             self.next_event_transitions << { options.delete(:from) => options.delete(:to) }.merge(options)
+          end
+
+          def ensure_payments_are_processed
+            if payment_required? && payments.valid.empty?
+              errors.add(:base, Spree.t(:no_payment_found))
+              false
+            elsif payment_required?
+              process_payments!
+            end
           end
 
           def checkout_steps

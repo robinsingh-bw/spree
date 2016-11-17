@@ -31,9 +31,28 @@ module Spree
     end
 
     def recalculate_adjustments
-      all_adjustments.includes(:adjustable).map(&:adjustable).uniq.each do |adjustable|
-        Adjustable::AdjustmentsUpdater.update(adjustable)
+      # all_adjustments.includes(:adjustable).map(&:adjustable).uniq.each do |adjustable|
+      #   Adjustable::AdjustmentsUpdater.update(adjustable)
+      # end
+
+      line_item_adjustments = all_adjustments.reload.select{|a| a.adjustable_type == Spree::LineItem.name }
+      line_items = Spree::LineItem.where(id: line_item_adjustments.map(&:adjustable_id)).uniq
+      line_items.includes(eager_loaded_line_item_associations).each do |adjustable|
+        adjustable.order = order
+        Spree::Adjustable::AdjustmentsUpdater.update(adjustable)
       end
+
+      other_adjustments = all_adjustments - line_item_adjustments
+      other_adjustments.map(&:adjustable).uniq.each do |adjustable|
+        Spree::Adjustable::AdjustmentsUpdater.update(adjustable)
+      end
+    end
+
+    def eager_loaded_line_item_associations
+      {
+        promo_adjustments: {source: [{promotion: :promotion_rules}, :calculator]},
+        tax_adjustments: {source: [:calculator]}
+      }
     end
 
     # Updates the following Order total values:
